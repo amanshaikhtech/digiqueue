@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: 13 148 136;
+  --color-primary-hover: 15 118 110;
+  --color-background: 248 250 252;
+  --color-surface: 255 255 255;
+  --color-border: 226 232 240;
+  --color-text-primary: 15 23 42;
+  --color-text-secondary: 100 116 139;
+  --color-success: 34 197 94;
+  --color-success-foreground: 22 101 52;
+  --color-warning: 245 158 11;
+  --color-warning-foreground: 146 64 14;
+  --color-danger: 239 68 68;
+  --color-danger-foreground: 153 27 27;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-ink font-sans antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* Glassmorphism utility */
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgb(var(--color-border) / 0.8);
+}
+
+.glass-card-dark {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(51, 65, 85, 0.8);
+}
+
+/* Custom animated pulse for active queues */
+@keyframes ring-pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgb(var(--color-success) / 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 16px rgb(var(--color-success) / 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgb(var(--color-success) / 0);
+  }
+}
+
+.pulse-ring-emerald {
+  animation: ring-pulse 2s infinite;
+}

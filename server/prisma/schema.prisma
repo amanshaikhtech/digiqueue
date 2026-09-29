@@ -1,0 +1,107 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  admin
+  supervisor
+}
+
+enum TokenStatus {
+  waiting
+  in_consultation @map("in-consultation")
+  completed
+  no_show         @map("no-show")
+  carried_over    @map("carried-over")
+}
+
+model Clinic {
+  id        String   @id @default(uuid())
+  name      String
+  address   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  doctors   Doctor[]
+  users     User[]
+
+  @@map("Clinics")
+}
+
+model Doctor {
+  id             String    @id @default(uuid())
+  clinicId       String    @map("clinic_id")
+  name           String
+  specialization String
+  isActive       Boolean   @default(true) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  clinic         Clinic    @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  sessions       Session[]
+  tokens         Token[]
+
+  @@map("Doctors")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  name         String
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  role         Role
+  clinicId     String?   @map("clinic_id")
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  clinic          Clinic?   @relation(fields: [clinicId], references: [id], onDelete: SetNull)
+  startedSessions Session[] @relation("UserStartedSessions")
+  updatedTokens   Token[]   @relation("UserUpdatedTokens")
+
+  @@map("Users")
+}
+
+model Session {
+  id                String    @id @default(uuid())
+  doctorId          String    @map("doctor_id")
+  startedAt         DateTime  @default(now()) @map("started_at")
+  endedAt           DateTime? @map("ended_at")
+  startedBy         String    @map("started_by")
+  currentTokenCount Int       @default(0) @map("current_token_count")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  doctor            Doctor    @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  startedByUser     User      @relation("UserStartedSessions", fields: [startedBy], references: [id])
+  tokens            Token[]
+
+  @@index([doctorId, endedAt])
+  @@map("Sessions")
+}
+
+model Token {
+  id            String      @id @default(uuid())
+  doctorId      String      @map("doctor_id")
+  sessionId     String      @map("session_id")
+  patientName   String      @map("patient_name")
+  patientAge    Int?        @map("patient_age")
+  guardianName  String      @map("guardian_name")
+  guardianPhone String      @map("guardian_phone")
+  tokenNumber   Int         @map("token_number")
+  status        TokenStatus @default(waiting)
+  updatedBy     String?     @map("updated_by")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  doctor        Doctor      @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  session       Session     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  updatedByUser User?       @relation("UserUpdatedTokens", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@unique([doctorId, sessionId, tokenNumber])
+  @@index([sessionId, status])
+  @@map("Tokens")
+}
